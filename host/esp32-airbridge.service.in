@@ -1,0 +1,37 @@
+[Unit]
+Description=ESP32 AirBridge Bluetooth transport
+After=bluetooth.service
+Wants=bluetooth.service
+BindsTo=@DEVICE_UNIT@
+After=@DEVICE_UNIT@
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+Environment=AIRBRIDGE_PORT=@PORT@
+EnvironmentFile=-/etc/default/esp32-airbridge
+ExecStart=/usr/bin/python3 /usr/local/lib/esp32-airbridge/airbridge.py run
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+KillMode=control-group
+# Root-owned code, restricted to the Bluetooth/UART privileges the transport needs.
+User=@USER@
+Group=@USER@
+SupplementaryGroups=dialout
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_BLUETOOTH AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests (H4 parser, voice rewrite, host transport)
+        run: make test
+      - name: Shell scripts
+        run: shellcheck -S warning scripts/*.sh
+
+  firmware:
+    runs-on: ubuntu-latest
+    container: espressif/idf:v5.5.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          cd firmware
+          idf.py build
+          cd build
+          python -m esptool --chip esp32 merge-bin --flash-mode dio --flash-freq 40m \
+            --flash-size 4MB -o ../../esp32-airbridge-full.bin @flash_args
+          cd ../..
+          sha256sum esp32-airbridge-full.bin > esp32-airbridge-full.bin.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esp32-airbridge-firmware
+          path: |
+            esp32-airbridge-full.bin
+            esp32-airbridge-full.bin.sha256
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            esp32-airbridge-full.bin
+            esp32-airbridge-full.bin.sha256
