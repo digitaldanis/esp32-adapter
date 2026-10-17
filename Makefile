@@ -22,8 +22,8 @@ firmware:
 
 # Single image for offset 0x0: bootloader, partition table and app.
 image: firmware
-	cd firmware/build && python3 -m esptool --chip esp32 merge-bin \
-		--flash-mode dio --flash-freq 40m --flash-size 4MB \
+	cd firmware/build && python3 -m esptool --chip esp32 merge_bin \
+		--flash_mode dio --flash_freq 40m --flash_size 4MB \
 		-o ../../esp32-airbridge-full.bin @flash_args
 
 clean:

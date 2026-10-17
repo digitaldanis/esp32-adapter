@@ -18,9 +18,12 @@ command -v btmgmt >/dev/null || die "btmgmt not found (install bluez)"
 
 PORT=${1:-}
 if [ -z "$PORT" ]; then
-    mapfile -t ports < <(ls /dev/serial/by-id/ 2>/dev/null | grep -i -E 'CP210|CH34|FTDI|UART|Serial' || true)
+    ports=()
+    for p in /dev/serial/by-id/*; do
+        [[ "${p,,}" =~ cp210|ch34|ftdi|uart|serial ]] && ports+=("$p")
+    done
     [ "${#ports[@]}" -eq 1 ] || die "found ${#ports[@]} candidate serial ports; pass one explicitly: sudo $0 /dev/serial/by-id/..."
-    PORT=/dev/serial/by-id/${ports[0]}
+    PORT=${ports[0]}
 fi
 [ -e "$PORT" ] || [ -n "$DESTDIR" ] || die "$PORT does not exist"
 case "$PORT" in /dev/serial/by-id/*) ;; *) echo "warning: $PORT is not a stable /dev/serial/by-id path" >&2 ;; esac

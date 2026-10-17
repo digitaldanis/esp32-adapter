@@ -79,7 +79,7 @@ pip install esptool
 ```
 
 The script first saves a **full backup** of your board's flash (`esp32-backup-<date>.bin`), so
-you can always go back with `esptool write-flash 0 esp32-backup-….bin`.
+you can always go back with `esptool write_flash 0 esp32-backup-….bin`.
 
 ### 2. Install the Linux side
 

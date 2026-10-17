@@ -21,16 +21,16 @@ fi
 
 BACKUP=${BACKUP:-esp32-backup-$(date +%Y%m%d-%H%M%S).bin}
 if [ "${SKIP_BACKUP:-0}" != 1 ]; then
-    echo "Backing up the full 4 MB flash to $BACKUP (restore with: esptool write-flash 0 $BACKUP)"
-    $ESPTOOL --chip esp32 --port "$PORT" --baud "$BAUD" read-flash 0 0x400000 "$BACKUP"
+    echo "Backing up the full 4 MB flash to $BACKUP (restore with: esptool write_flash 0 $BACKUP)"
+    $ESPTOOL --chip esp32 --port "$PORT" --baud "$BAUD" read_flash 0 0x400000 "$BACKUP"
 fi
 
 if [ -n "$IMAGE" ]; then
-    $ESPTOOL --chip esp32 --port "$PORT" --baud "$BAUD" write-flash \
-        --flash-mode dio --flash-freq 40m --flash-size 4MB 0x0 "$IMAGE"
+    $ESPTOOL --chip esp32 --port "$PORT" --baud "$BAUD" write_flash \
+        --flash_mode dio --flash_freq 40m --flash_size 4MB 0x0 "$IMAGE"
 else
     BUILD=$REPO/firmware/build
     [ -f "$BUILD/flash_args" ] || { echo "error: no build found; run 'idf.py build' in firmware/ or pass an image" >&2; exit 1; }
-    (cd "$BUILD" && $ESPTOOL --chip esp32 --port "$PORT" --baud "$BAUD" write-flash @flash_args)
+    (cd "$BUILD" && $ESPTOOL --chip esp32 --port "$PORT" --baud "$BAUD" write_flash @flash_args)
 fi
 echo "Flashed. The ESP32 now speaks HCI at 921600 baud on its USB serial port."
