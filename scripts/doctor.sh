@@ -52,3 +52,12 @@ for card in $(pactl list short cards 2>/dev/null | awk '$2 ~ /^bluez_card\./ {pr
         *)                              warn "$card: $profile" ;;
     esac
 done
+
+echo "Radio"
+# A running scan (Bluetooth settings window, `bluetoothctl scan on`) makes the single
+# radio do Classic inquiry + LE scanning, which interrupts A2DP every ~16 s.
+if bluetoothctl show 2>/dev/null | grep -q "Discovering: yes"; then
+    warn "scanning is active: audio drops out while it runs  →  close the Bluetooth settings window / run 'bluetoothctl scan off'"
+else
+    ok "no device scan running"
+fi

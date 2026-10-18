@@ -199,6 +199,7 @@ CI builds the firmware on every push and attaches the image to tagged releases.
 | Symptom | Fix |
 |---|---|
 | No `ESP32 AirBridge` in `bluetoothctl list` | `journalctl -u esp32-airbridge -n 30`. A handshake failure usually means the firmware isn't flashed or another program (serial monitor, ModemManager) holds the port. |
+| Music drops out every few seconds | A device scan is running (Bluetooth settings window open, `bluetoothctl scan on`). Classic inquiry plus LE scanning takes the single radio away from A2DP for ~5 s every ~16 s. Close the window or run `bluetoothctl scan off`; `doctor.sh` flags it under *Radio*. |
 | Music stutters | `./scripts/audio-setup.sh` to switch from AAC to SBC. Keep the board in line of sight; use an external antenna and a USB extension away from the PC case. |
 | No microphone in apps | Run `./scripts/audio-setup.sh`, then pick the headset as input device. `doctor.sh` must show *auto-switch on*. |
 | Mic records silence | Make sure the call profile is `headset-head-unit` (mSBC), not `-cvsd`. Speak a moment after recording starts; the profile switch takes ~1–2 s. |
