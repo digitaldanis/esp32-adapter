@@ -24,6 +24,13 @@ static TaskHandle_t rx_task_handle;
 static atomic_bool fault;
 static h4_parser_t parser;
 
+/* The controller defaults to 0..+3 dBm on BR/EDR. A2DP at full SBC bitpool sends a
+ * 3-DH5 packet every ~21 ms with no slack, so any retransmission burst (USB 3 noise,
+ * a phone nearby) stalled completions for ~200 ms in btmon and dropped audio.
+ * Use the chip's full +9 dBm, with a +6 dBm floor so power control cannot back off far. */
+static esp_err_t set_bredr_tx_power(void) {
+    return esp_bredr_tx_power_set(ESP_PWR_LVL_P6, ESP_PWR_LVL_P9);
+}
 static void host_send_available(void) {
     if (rx_task_handle) xTaskNotifyGive(rx_task_handle);
 }
@@ -64,6 +71,10 @@ static bool send_controller(const uint8_t *data, size_t length, void *unused) {
             opcode == 0x043d || opcode == 0x043e) {
             if (esp_bredr_sco_datapath_set(ESP_SCO_DATA_PATH_HCI) != ESP_OK)
                 return false;
+        }
+        /* Same for TX power: reassert before page scan or a new ACL link starts. */
+        if (opcode == 0x0c1a || opcode == 0x0405 || opcode == 0x0409) {
+            if (set_bredr_tx_power() != ESP_OK) return false;
         }
     }
     esp_vhci_host_send_packet((uint8_t *)data, (uint16_t)length);
@@ -136,6 +147,7 @@ void app_main(void) {
     static const esp_vhci_host_callback_t callbacks = {.notify_host_send_available = host_send_available,
         .notify_host_recv = controller_packet};
     ESP_ERROR_CHECK(esp_bt_controller_enable(ESP_BT_MODE_BTDM));
+    ESP_ERROR_CHECK(set_bredr_tx_power());
     ESP_ERROR_CHECK(esp_vhci_host_register_callback(&callbacks));
     ESP_ERROR_CHECK(esp_bredr_sco_datapath_set(ESP_SCO_DATA_PATH_HCI));
     if (xTaskCreatePinnedToCore(transmit_uart, "h4-tx", 3072, NULL, 19, NULL, 1) != pdPASS ||
